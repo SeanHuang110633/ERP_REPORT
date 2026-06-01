@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Q2 Code Flow</title>
+    <style>
+      :root {
+        --bg: #f6f2ea;
+        --ink: #1c1b1a;
+        --muted: #5b534a;
+        --card: #ffffff;
+        --accent: #0f5c55;
+        --line: #e1d8cc;
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+        background: radial-gradient(
+          circle at 10% 10%,
+          #f7efe4,
+          #f6f2ea 40%,
+          #f2efe9 100%
+        );
+        color: var(--ink);
+      }
+      header {
+        padding: 32px 20px 16px;
+        text-align: center;
+      }
+      header h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        letter-spacing: 0.5px;
+      }
+      header p {
+        margin: 0;
+        color: var(--muted);
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 8px 20px 40px;
+        display: grid;
+        gap: 16px;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px 18px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      }
+      section h2 {
+        margin: 0 0 10px;
+        font-size: 20px;
+        color: var(--accent);
+      }
+      .note {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .flow {
+        list-style: none;
+        margin: 0;
+        padding: 10px 12px;
+        background: #fbfaf7;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+      }
+      .flow li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #ffffff;
+        font-size: 14px;
+      }
+      .flow li + li {
+        margin-top: 8px;
+      }
+      .flow li + li::before {
+        content: "->";
+        color: var(--muted);
+        font-weight: 600;
+        margin-right: 6px;
+      }
+      footer {
+        text-align: center;
+        padding: 12px 20px 28px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Q2 流程圖總覽</h1>
+      <p>以流程圖方式呈現各功能對應的方法呼叫鏈路</p>
+    </header>
+    <main>
+      <section>
+        <h2>1) 啟動程式到載入 ALV1</h2>
+        <p class="note">從程式入口到畫面 0100 完成三個 ALV 的首次顯示。</p>
+        <ol class="flow">
+          <li>START-OF-SELECTION</li>
+          <li>lcl_app->start()</li>
+          <li>lcl_app->load_documents()</li>
+          <li>lcl_app->calculate_document_totals()</li>
+          <li>CALL SCREEN 0100</li>
+          <li>PBO: status_0100 / init_0100</li>
+          <li>lcl_app->init_screen()</li>
+          <li>lcl_app->display_alvs()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>2) ALV1 點擊 -> ALV2</h2>
+        <p class="note">點擊傳票列後載入分錄明細。</p>
+        <ol class="flow">
+          <li>ALV1 double click / hotspot</li>
+          <li>lcl_event_handler->on_doc_*</li>
+          <li>lcl_app->handle_doc_row()</li>
+          <li>lcl_app->load_items()</li>
+          <li>lcl_app->refresh_item_alv()</li>
+          <li>lcl_app->refresh_check_alv()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>3) ALV2 點科目代碼 -> ALV3（科目檢核）</h2>
+        <p class="note">點擊 HKONT 後載入科目主檔檢核。</p>
+        <ol class="flow">
+          <li>ALV2 double click / hotspot HKONT</li>
+          <li>lcl_event_handler->on_item_*</li>
+          <li>lcl_app->handle_item_row()</li>
+          <li>lcl_app->load_account_checks()</li>
+          <li>lcl_app->refresh_check_alv()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>4) ALV2 點客戶代碼 -> ALV3（客戶檢核）</h2>
+        <p class="note">點擊 KUNNR 後載入客戶主檔檢核。</p>
+        <ol class="flow">
+          <li>ALV2 double click / hotspot KUNNR</li>
+          <li>lcl_event_handler->on_item_*</li>
+          <li>lcl_app->handle_item_row()</li>
+          <li>lcl_app->load_customer_checks()</li>
+          <li>lcl_app->refresh_check_alv()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>5) Risk Only（RISK）</h2>
+        <p class="note">只顯示風險傳票並清空下方明細。</p>
+        <ol class="flow">
+          <li>PAI: user_command_0100</li>
+          <li>lcl_app->handle_user_command('RISK')</li>
+          <li>lcl_app->filter_risk_only()</li>
+          <li>lcl_app->refresh_doc_alv()</li>
+          <li>lcl_app->clear_items_and_checks()</li>
+          <li>lcl_app->refresh_item_alv()</li>
+          <li>lcl_app->refresh_check_alv()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>6) Show All（ALL）</h2>
+        <p class="note">恢復顯示全部傳票並清空下方明細。</p>
+        <ol class="flow">
+          <li>PAI: user_command_0100</li>
+          <li>lcl_app->handle_user_command('ALL')</li>
+          <li>lcl_app->show_all_documents()</li>
+          <li>lcl_app->refresh_doc_alv()</li>
+          <li>lcl_app->clear_items_and_checks()</li>
+          <li>lcl_app->refresh_item_alv()</li>
+          <li>lcl_app->refresh_check_alv()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>7) Summary（SUMM）</h2>
+        <p class="note">顯示 OK/WARNING/ERROR 統計。</p>
+        <ol class="flow">
+          <li>PAI: user_command_0100</li>
+          <li>lcl_app->handle_user_command('SUMM')</li>
+          <li>lcl_app->show_risk_summary()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>8) Back / Exit</h2>
+        <p class="note">離開畫面或結束程式。</p>
+        <ol class="flow">
+          <li>PAI: user_command_0100</li>
+          <li>lcl_app->handle_user_command('BACK'/'CANC')</li>
+          <li>LEAVE TO SCREEN 0</li>
+          <li>lcl_app->handle_user_command('EXIT')</li>
+          <li>LEAVE PROGRAM</li>
+        </ol>
+      </section>
+    </main>
+    <footer>Q2 Flow Diagram - ZFIN02_10_011_FI_ALV_AUDIT</footer>
+  </body>
+</html>

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Q1 Code Flow</title>
+    <style>
+      :root {
+        --bg: #f6f2ea;
+        --ink: #1c1b1a;
+        --muted: #5b534a;
+        --card: #ffffff;
+        --accent: #0f5c55;
+        --line: #e1d8cc;
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+        background: radial-gradient(
+          circle at 12% 12%,
+          #f7efe4,
+          #f6f2ea 40%,
+          #f2efe9 100%
+        );
+        color: var(--ink);
+      }
+      header {
+        padding: 32px 20px 16px;
+        text-align: center;
+      }
+      header h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        letter-spacing: 0.5px;
+      }
+      header p {
+        margin: 0;
+        color: var(--muted);
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 8px 20px 40px;
+        display: grid;
+        gap: 16px;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px 18px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      }
+      section h2 {
+        margin: 0 0 10px;
+        font-size: 20px;
+        color: var(--accent);
+      }
+      .note {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .flow {
+        list-style: none;
+        margin: 0;
+        padding: 10px 12px;
+        background: #fbfaf7;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+      }
+      .flow li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #ffffff;
+        font-size: 14px;
+      }
+      .flow li + li {
+        margin-top: 8px;
+      }
+      .flow li + li::before {
+        content: "->";
+        color: var(--muted);
+        font-weight: 600;
+        margin-right: 6px;
+      }
+      footer {
+        text-align: center;
+        padding: 12px 20px 28px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Q1 流程圖總覽</h1>
+      <p>以流程清單方式呈現 Dialog 與互動式報表的呼叫鏈路</p>
+    </header>
+    <main>
+      <section>
+        <h2>1) 程式啟動與第一層清單</h2>
+        <p class="note">載入 BKPF 傳票抬頭並輸出第一層互動清單。</p>
+        <ol class="flow">
+          <li>START-OF-SELECTION</li>
+          <li>go_report->start()</li>
+          <li>lcl_report->get_level1()</li>
+          <li>lcl_report->display_level1()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>2) 第一層雙擊 -> 第二層明細</h2>
+        <p class="note">AT LINE-SELECTION 進入互動處理。</p>
+        <ol class="flow">
+          <li>AT LINE-SELECTION</li>
+          <li>lcl_report->handle_interaction()</li>
+          <li>sy-lsind = 1</li>
+          <li>lcl_report->get_level2()</li>
+          <li>lcl_report->display_level2()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>3) 第二層點 HKONT -> 第三層科目主檔</h2>
+        <p class="note">依點擊欄位下鑽 SKA1。</p>
+        <ol class="flow">
+          <li>AT LINE-SELECTION</li>
+          <li>lcl_report->handle_interaction()</li>
+          <li>sy-lsind = 2</li>
+          <li>get_level3_skat()</li>
+          <li>display_level3_skat()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>4) 第二層點 KUNNR -> 第三層客戶主檔</h2>
+        <p class="note">依點擊欄位下鑽 KNA1。</p>
+        <ol class="flow">
+          <li>AT LINE-SELECTION</li>
+          <li>lcl_report->handle_interaction()</li>
+          <li>sy-lsind = 2</li>
+          <li>get_level3_kna1()</li>
+          <li>display_level3_kna1()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>5) 第二層雙擊審核行 -> Screen 0100</h2>
+        <p class="note">Report 進入 Dialog 審核畫面。</p>
+        <ol class="flow">
+          <li>AT LINE-SELECTION</li>
+          <li>lcl_report->handle_interaction()</li>
+          <li>sy-lsind = 2 + gv_line_action = REVIEW_DOC</li>
+          <li>prepare_review_dialog()</li>
+          <li>CALL SCREEN 0100</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>6) Screen 0100 功能碼流程</h2>
+        <p class="note">SAVE / VIEW / CLEAR / BACK 的處理路徑。</p>
+        <ol class="flow">
+          <li>PAI: user_command_0100</li>
+          <li>保存: save_review()</li>
+          <li>查看摘要: CALL SCREEN 0200</li>
+          <li>清除: clear_review_input()</li>
+          <li>返回: LEAVE TO SCREEN 0</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>7) Screen 0200 轉出摘要報表</h2>
+        <p class="note">Dialog 轉回 list-processing 顯示摘要。</p>
+        <ol class="flow">
+          <li>PBO: status_0200</li>
+          <li>SUPPRESS DIALOG</li>
+          <li>LEAVE TO LIST-PROCESSING</li>
+          <li>display_review_summary()</li>
+        </ol>
+      </section>
+    </main>
+    <footer>Q1 Flow Diagram - ZFIN01_10_011_FI_DIALOG_AUDIT</footer>
+  </body>
+</html>

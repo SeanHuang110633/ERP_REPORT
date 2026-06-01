@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MID Code Flow</title>
+    <style>
+      :root {
+        --bg: #f6f2ea;
+        --ink: #1c1b1a;
+        --muted: #5b534a;
+        --card: #ffffff;
+        --accent: #0f5c55;
+        --line: #e1d8cc;
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+        background: radial-gradient(
+          circle at 12% 12%,
+          #f7efe4,
+          #f6f2ea 40%,
+          #f2efe9 100%
+        );
+        color: var(--ink);
+      }
+      header {
+        padding: 32px 20px 16px;
+        text-align: center;
+      }
+      header h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        letter-spacing: 0.5px;
+      }
+      header p {
+        margin: 0;
+        color: var(--muted);
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 8px 20px 40px;
+        display: grid;
+        gap: 16px;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px 18px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      }
+      section h2 {
+        margin: 0 0 10px;
+        font-size: 20px;
+        color: var(--accent);
+      }
+      .note {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .flow {
+        list-style: none;
+        margin: 0;
+        padding: 10px 12px;
+        background: #fbfaf7;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+      }
+      .flow li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #ffffff;
+        font-size: 14px;
+      }
+      .flow li + li {
+        margin-top: 8px;
+      }
+      .flow li + li::before {
+        content: "->";
+        color: var(--muted);
+        font-weight: 600;
+        margin-right: 6px;
+      }
+      footer {
+        text-align: center;
+        padding: 12px 20px 28px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>期中專案流程圖總覽</h1>
+      <p>以流程清單方式呈現三層互動式報表的方法呼叫鏈路</p>
+    </header>
+    <main>
+      <section>
+        <h2>1) 程式啟動與第一層清單</h2>
+        <p class="note">從程式入口到 BKPF 第一層清單輸出。</p>
+        <ol class="flow">
+          <li>START-OF-SELECTION</li>
+          <li>CREATE OBJECT go_report</li>
+          <li>go_report->start()</li>
+          <li>lcl_report->get_level1()</li>
+          <li>lcl_report->display_level1()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>2) 第一層雙擊 -> 第二層明細</h2>
+        <p class="note">AT LINE-SELECTION 觸發互動處理。</p>
+        <ol class="flow">
+          <li>AT LINE-SELECTION</li>
+          <li>lcl_report->handle_interaction()</li>
+          <li>gv_level = sy-lsind = 1</li>
+          <li>lcl_report->get_level2()</li>
+          <li>lcl_report->display_level2()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>3) 第二層明細輸出與借貸平衡</h2>
+        <p class="note">顯示 BSEG + SKAT 明細並計算借貸差額。</p>
+        <ol class="flow">
+          <li>LOOP mt_level2</li>
+          <li>Fault Injection (特定條件修改金額)</li>
+          <li>累加借貸差額 (S 加 / H 減)</li>
+          <li>WRITE 明細 (HKONT / KUNNR 可下鑽)</li>
+          <li>輸出借貸平衡結果</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>4) 第二層點 HKONT -> 第三層科目主檔</h2>
+        <p class="note">依游標欄位分流到 SKA1 科目主檔稽核。</p>
+        <ol class="flow">
+          <li>AT LINE-SELECTION</li>
+          <li>lcl_report->handle_interaction()</li>
+          <li>gv_level = sy-lsind = 2</li>
+          <li>GET CURSOR FIELD (HKONT)</li>
+          <li>lcl_report->get_level3_skat()</li>
+          <li>lcl_report->display_level3_skat()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>5) 第二層點 KUNNR -> 第三層客戶主檔</h2>
+        <p class="note">依游標欄位分流到 KNA1 客戶主檔稽核。</p>
+        <ol class="flow">
+          <li>AT LINE-SELECTION</li>
+          <li>lcl_report->handle_interaction()</li>
+          <li>gv_level = sy-lsind = 2</li>
+          <li>GET CURSOR FIELD (KUNNR)</li>
+          <li>lcl_report->get_level3_kna1()</li>
+          <li>lcl_report->display_level3_kna1()</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>6) 無效欄位點擊提示</h2>
+        <p class="note">點到非 HKONT / KUNNR 欄位時顯示提示訊息。</p>
+        <ol class="flow">
+          <li>AT LINE-SELECTION</li>
+          <li>lcl_report->handle_interaction()</li>
+          <li>gv_level = sy-lsind = 2</li>
+          <li>GET CURSOR FIELD (其他欄位)</li>
+          <li>MESSAGE '請點選藍色的 客戶代碼 或 科目代碼 進行下鑽。'</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>7) 第三層底層提示</h2>
+        <p class="note">進入最底層後顯示狀態列訊息。</p>
+        <ol class="flow">
+          <li>display_level3_skat()</li>
+          <li>MESSAGE '已到達報表最底層' TYPE 'S'</li>
+          <li>display_level3_kna1()</li>
+          <li>MESSAGE '已到達報表最底層' TYPE 'S'</li>
+        </ol>
+      </section>
+    </main>
+    <footer>MID Flow Diagram - Z_114423011_FI7</footer>
+  </body>
+</html>

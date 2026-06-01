@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAP Tables ER Model</title>
+    <style>
+      :root {
+        --bg: #f7f8fb;
+        --surface: #ffffff;
+        --ink: #17202a;
+        --muted: #657080;
+        --line: #d9e0ea;
+        --blue: #1f6feb;
+        --teal: #12805c;
+        --amber: #b66a00;
+        --rose: #c2415b;
+        --soft-blue: #eaf2ff;
+        --soft-teal: #e7f6f0;
+        --soft-amber: #fff3df;
+        --soft-rose: #fdecef;
+        --shadow: 0 14px 34px rgba(31, 45, 61, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", Arial,
+          sans-serif;
+        line-height: 1.65;
+      }
+
+      .page {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 32px 22px 56px;
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 18px;
+        padding: 20px 0 24px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--blue);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        line-height: 1.08;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 760px;
+        margin: 14px 0 0;
+        color: var(--muted);
+        font-size: 1rem;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        align-content: start;
+      }
+
+      .metric {
+        min-height: 88px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 1.55rem;
+        line-height: 1;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      section {
+        margin-top: 34px;
+      }
+
+      .section-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 1.32rem;
+      }
+
+      .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .table-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(150px, 1fr));
+        gap: 12px;
+      }
+
+      .table-card {
+        min-height: 150px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-top: 5px solid var(--blue);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .table-card.document {
+        border-top-color: var(--blue);
+      }
+
+      .table-card.line-item {
+        border-top-color: var(--teal);
+      }
+
+      .table-card.text-table {
+        border-top-color: var(--amber);
+      }
+
+      .table-card.master {
+        border-top-color: var(--rose);
+      }
+
+      .table-card h3 {
+        margin: 0;
+        font-size: 1.38rem;
+        line-height: 1.1;
+      }
+
+      .table-card .name {
+        margin: 6px 0 10px;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: var(--soft-blue);
+        color: var(--blue);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      .line-item .badge {
+        background: var(--soft-teal);
+        color: var(--teal);
+      }
+
+      .text-table .badge {
+        background: var(--soft-amber);
+        color: var(--amber);
+      }
+
+      .master .badge {
+        background: var(--soft-rose);
+        color: var(--rose);
+      }
+
+      .table-card p {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 0.93rem;
+      }
+
+      .model-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 2.2fr) minmax(240px, 0.8fr);
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .diagram {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      svg {
+        display: block;
+        min-width: 860px;
+        width: 100%;
+        height: auto;
+      }
+
+      .notes {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .note-row {
+        padding: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .note-row:last-child {
+        border-bottom: 0;
+      }
+
+      .note-row strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .note-row p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .dictionary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .field-group {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .field-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfcff;
+      }
+
+      .field-title h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .field-title span {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      tr:last-child th,
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      th {
+        width: 118px;
+        color: var(--ink);
+        font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 0.93rem;
+        white-space: nowrap;
+      }
+
+      td {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .key {
+        color: var(--blue);
+        font-weight: 700;
+      }
+
+      .join {
+        color: var(--teal);
+        font-weight: 700;
+      }
+
+      .footer {
+        margin-top: 34px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.9rem;
+        text-align: center;
+      }
+
+      @media (max-width: 980px) {
+        .table-grid,
+        .dictionary,
+        .model-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .summary {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          padding: 24px 14px 42px;
+        }
+
+        .summary {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .table-card {
+          min-height: auto;
+        }
+
+        th,
+        td {
+          display: block;
+          width: 100%;
+          padding: 8px 12px;
+        }
+
+        th {
+          padding-bottom: 2px;
+        }
+
+        td {
+          padding-top: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div>
+          <p class="eyebrow">GBI FI Audit Report</p>
+          <h1>SAP 標準表與 ER Model</h1>
+          <p class="lead">
+            本頁整理期中 FI 三層互動報表使用到的 SAP 標準表、關聯鍵與實際欄位。
+            報表從會計傳票抬頭出發，展開明細分錄，再依科目或客戶進入主檔稽核。
+          </p>
+        </div>
+        <div class="summary" aria-label="專案摘要">
+          <div class="metric">
+            <strong>5</strong>
+            <span>SAP 標準表</span>
+          </div>
+          <div class="metric">
+            <strong>3</strong>
+            <span>互動報表層級</span>
+          </div>
+          <div class="metric">
+            <strong>2</strong>
+            <span>第三層分流</span>
+          </div>
+          <div class="metric">
+            <strong>RV</strong>
+            <span>銷售相關傳票類型</span>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section>
+          <div class="section-head">
+            <h2>使用表定位</h2>
+            <p class="hint">每張表只取本專案需要的欄位，沒有使用整張表所有欄位。</p>
+          </div>
+          <div class="table-grid">
+            <article class="table-card document">
+              <h3>BKPF</h3>
+              <p class="name">會計傳票抬頭表</p>
+              <span class="badge">Level 1</span>
+              <p>建立傳票清單與第一層下鑽索引。</p>
+            </article>
+            <article class="table-card line-item">
+              <h3>BSEG</h3>
+              <p class="name">會計傳票明細表</p>
+              <span class="badge">Level 2</span>
+              <p>顯示每張傳票的借貸分錄與金額。</p>
+            </article>
+            <article class="table-card text-table">
+              <h3>SKAT</h3>
+              <p class="name">總帳科目文字表</p>
+              <span class="badge">Level 2 Join</span>
+              <p>補上科目名稱，讓明細不只顯示代碼。</p>
+            </article>
+            <article class="table-card master">
+              <h3>SKA1</h3>
+              <p class="name">總帳科目主檔表</p>
+              <span class="badge">Level 3 A</span>
+              <p>從科目代碼下鑽，檢查科目主檔屬性。</p>
+            </article>
+            <article class="table-card master">
+              <h3>KNA1</h3>
+              <p class="name">客戶主檔一般資料表</p>
+              <span class="badge">Level 3 B</span>
+              <p>從客戶代碼下鑽，檢查交易對象資料。</p>
+            </article>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <h2>ER Model 與下鑽關係</h2>
+            <p class="hint">藍色是傳票抬頭，綠色是明細，黃色是文字表，紅色是主檔。</p>
+          </div>
+          <div class="model-panel">
+            <div class="diagram">
+              <svg viewBox="0 0 920 500" role="img" aria-label="SAP 表關係 ER Model">
+                <defs>
+                  <marker
+                    id="arrow"
+                    markerWidth="10"
+                    markerHeight="10"
+                    refX="9"
+                    refY="3"
+                    orient="auto"
+                    markerUnits="strokeWidth"
+                  >
+                    <path d="M0,0 L9,3 L0,6 Z" fill="#657080"></path>
+                  </marker>
+                  <filter id="boxShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#1f2d3d" flood-opacity="0.12" />
+                  </filter>
+                </defs>
+
+                <rect x="42" y="52" width="230" height="120" rx="8" fill="#eaf2ff" stroke="#1f6feb" stroke-width="2" filter="url(#boxShadow)" />
+                <text x="66" y="86" font-size="24" font-weight="700" fill="#1f6feb">BKPF</text>
+                <text x="66" y="113" font-size="15" fill="#17202a">會計傳票抬頭</text>
+                <text x="66" y="143" font-size="13" fill="#657080">Key: BUKRS + BELNR + GJAHR</text>
+
+                <rect x="42" y="310" width="230" height="120" rx="8" fill="#e7f6f0" stroke="#12805c" stroke-width="2" filter="url(#boxShadow)" />
+                <text x="66" y="344" font-size="24" font-weight="700" fill="#12805c">BSEG</text>
+                <text x="66" y="371" font-size="15" fill="#17202a">會計傳票明細</text>
+                <text x="66" y="401" font-size="13" fill="#657080">Fields: BUZEI, HKONT, DMBTR</text>
+
+                <rect x="360" y="310" width="210" height="120" rx="8" fill="#fff3df" stroke="#b66a00" stroke-width="2" filter="url(#boxShadow)" />
+                <text x="384" y="344" font-size="24" font-weight="700" fill="#b66a00">SKAT</text>
+                <text x="384" y="371" font-size="15" fill="#17202a">總帳科目文字</text>
+                <text x="384" y="401" font-size="13" fill="#657080">Join: HKONT = SAKNR</text>
+
+                <rect x="660" y="72" width="220" height="120" rx="8" fill="#fdecef" stroke="#c2415b" stroke-width="2" filter="url(#boxShadow)" />
+                <text x="684" y="106" font-size="24" font-weight="700" fill="#c2415b">SKA1</text>
+                <text x="684" y="133" font-size="15" fill="#17202a">總帳科目主檔</text>
+                <text x="684" y="163" font-size="13" fill="#657080">Drill: HKONT -> SAKNR</text>
+
+                <rect x="660" y="310" width="220" height="120" rx="8" fill="#fdecef" stroke="#c2415b" stroke-width="2" filter="url(#boxShadow)" />
+                <text x="684" y="344" font-size="24" font-weight="700" fill="#c2415b">KNA1</text>
+                <text x="684" y="371" font-size="15" fill="#17202a">客戶主檔一般資料</text>
+                <text x="684" y="401" font-size="13" fill="#657080">Drill: KUNNR -> KUNNR</text>
+
+                <path d="M157 172 L157 310" stroke="#657080" stroke-width="2.5" fill="none" marker-end="url(#arrow)" />
+                <text x="178" y="240" font-size="13" fill="#657080">傳票抬頭展開明細</text>
+                <text x="178" y="260" font-size="12" fill="#657080">BUKRS + BELNR + GJAHR</text>
+
+                <path d="M272 370 L360 370" stroke="#657080" stroke-width="2.5" fill="none" marker-end="url(#arrow)" />
+                <text x="292" y="350" font-size="13" fill="#657080">科目文字</text>
+
+                <path d="M570 330 C620 280, 610 170, 660 132" stroke="#657080" stroke-width="2.5" fill="none" marker-end="url(#arrow)" />
+                <text x="594" y="238" font-size="13" fill="#657080">點 HKONT</text>
+
+                <path d="M570 390 L660 390" stroke="#657080" stroke-width="2.5" fill="none" marker-end="url(#arrow)" />
+                <text x="594" y="374" font-size="13" fill="#657080">點 KUNNR</text>
+
+                <rect x="40" y="462" width="840" height="1" fill="#d9e0ea" />
+                <text x="42" y="486" font-size="13" fill="#657080">
+                  報表流程：BKPF 第一層清單 -> BSEG + SKAT 第二層明細 -> SKA1 / KNA1 第三層主檔稽核
+                </text>
+              </svg>
+            </div>
+
+            <aside class="notes" aria-label="關係重點">
+              <div class="note-row">
+                <strong>第一層到第二層</strong>
+                <p>用 `BUKRS + BELNR + GJAHR` 從 BKPF 對應到 BSEG。</p>
+              </div>
+              <div class="note-row">
+                <strong>第二層補科目名稱</strong>
+                <p>BSEG 的 `HKONT` 對應 SKAT 的 `SAKNR`，並限制語言與科目表。</p>
+              </div>
+              <div class="note-row">
+                <strong>第三層分流</strong>
+                <p>點 `HKONT` 查 SKA1；點 `KUNNR` 查 KNA1。</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <h2>欄位字典</h2>
+            <p class="hint">藍色欄位是主要鍵值，綠色欄位是 Join / Drill-down 關聯欄位。</p>
+          </div>
+
+          <div class="dictionary">
+            <article class="field-group">
+              <div class="field-title">
+                <h3>BKPF</h3>
+                <span>會計傳票抬頭表</span>
+              </div>
+              <table>
+                <tr>
+                  <th class="key">BUKRS</th>
+                  <td>公司代碼，例如 `US00`；查詢條件，也顯示在第一層。</td>
+                </tr>
+                <tr>
+                  <th class="key">BELNR</th>
+                  <td>會計傳票號碼；第一層主要顯示欄位，雙擊後查第二層。</td>
+                </tr>
+                <tr>
+                  <th class="key">GJAHR</th>
+                  <td>會計年度；搭配公司代碼與傳票號碼定位資料。</td>
+                </tr>
+                <tr>
+                  <th>BLART</th>
+                  <td>傳票類型；本專案固定篩選 `RV` 銷售相關傳票。</td>
+                </tr>
+                <tr>
+                  <th>BLDAT</th>
+                  <td>文件日期；第一層顯示。</td>
+                </tr>
+                <tr>
+                  <th>BUDAT</th>
+                  <td>過帳日期；第一層顯示。</td>
+                </tr>
+              </table>
+            </article>
+
+            <article class="field-group">
+              <div class="field-title">
+                <h3>BSEG</h3>
+                <span>會計傳票明細表</span>
+              </div>
+              <table>
+                <tr>
+                  <th class="key">BUKRS</th>
+                  <td>公司代碼；與 BKPF 一起定位傳票。</td>
+                </tr>
+                <tr>
+                  <th class="key">BELNR</th>
+                  <td>傳票號碼；與 BKPF 一起定位傳票。</td>
+                </tr>
+                <tr>
+                  <th class="key">GJAHR</th>
+                  <td>會計年度；與 BKPF 一起定位傳票。</td>
+                </tr>
+                <tr>
+                  <th>BUZEI</th>
+                  <td>傳票明細行號；第二層顯示每筆分錄序號。</td>
+                </tr>
+                <tr>
+                  <th class="join">HKONT</th>
+                  <td>總帳科目代碼；第二層顯示，可連到 SKAT / SKA1。</td>
+                </tr>
+                <tr>
+                  <th>SHKZG</th>
+                  <td>借貸標示；`S` 借方、`H` 貸方，用於借貸平衡計算。</td>
+                </tr>
+                <tr>
+                  <th>DMBTR</th>
+                  <td>本位幣金額；第二層顯示並參與借貸加總。</td>
+                </tr>
+                <tr>
+                  <th>MENGE</th>
+                  <td>數量；第二層輔助顯示。</td>
+                </tr>
+                <tr>
+                  <th>MEINS</th>
+                  <td>數量單位；第二層輔助顯示。</td>
+                </tr>
+                <tr>
+                  <th class="join">KUNNR</th>
+                  <td>客戶代碼；第二層顯示，可下鑽到 KNA1。</td>
+                </tr>
+                <tr>
+                  <th>MATNR</th>
+                  <td>物料代碼；第二層輔助顯示交易物料。</td>
+                </tr>
+              </table>
+            </article>
+
+            <article class="field-group">
+              <div class="field-title">
+                <h3>SKAT</h3>
+                <span>總帳科目文字表</span>
+              </div>
+              <table>
+                <tr>
+                  <th class="join">SAKNR</th>
+                  <td>總帳科目號碼；與 `BSEG-HKONT` JOIN。</td>
+                </tr>
+                <tr>
+                  <th>TXT20</th>
+                  <td>科目短文字 / 科目名稱；第二層顯示科目名稱。</td>
+                </tr>
+                <tr>
+                  <th>SPRAS</th>
+                  <td>語言代碼；篩選目前登入語言，避免多語系重複。</td>
+                </tr>
+                <tr>
+                  <th>KTOPL</th>
+                  <td>科目表；本專案篩選 `GL00`。</td>
+                </tr>
+              </table>
+            </article>
+
+            <article class="field-group">
+              <div class="field-title">
+                <h3>SKA1</h3>
+                <span>總帳科目主檔表</span>
+              </div>
+              <table>
+                <tr>
+                  <th>KTOPL</th>
+                  <td>科目表；第三層顯示。</td>
+                </tr>
+                <tr>
+                  <th class="join">SAKNR</th>
+                  <td>總帳科目號碼；用第二層的 `HKONT` 查詢。</td>
+                </tr>
+                <tr>
+                  <th>XBILK</th>
+                  <td>是否為資產負債表科目；`X` 表示是。</td>
+                </tr>
+                <tr>
+                  <th>GVTYP</th>
+                  <td>損益表科目類型；第三層顯示科目分類。</td>
+                </tr>
+                <tr>
+                  <th>KTOKS</th>
+                  <td>科目群組；第三層顯示科目群組。</td>
+                </tr>
+              </table>
+            </article>
+
+            <article class="field-group">
+              <div class="field-title">
+                <h3>KNA1</h3>
+                <span>客戶主檔一般資料表</span>
+              </div>
+              <table>
+                <tr>
+                  <th class="join">KUNNR</th>
+                  <td>客戶代碼；用第二層的 `KUNNR` 查詢。</td>
+                </tr>
+                <tr>
+                  <th>NAME1</th>
+                  <td>客戶名稱；第三層顯示。</td>
+                </tr>
+                <tr>
+                  <th>ORT01</th>
+                  <td>城市 / 地區；第三層顯示。</td>
+                </tr>
+                <tr>
+                  <th>LAND1</th>
+                  <td>國家代碼；第三層顯示。</td>
+                </tr>
+                <tr>
+                  <th>STRAS</th>
+                  <td>街道地址；第三層顯示。</td>
+                </tr>
+                <tr>
+                  <th>TELF1</th>
+                  <td>電話；第三層顯示。</td>
+                </tr>
+              </table>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <div class="footer">FYSM ERP Project - Tables Summary</div>
+    </div>
+  </body>
+</html>
