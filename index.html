@@ -143,6 +143,50 @@
         background: var(--q2);
       }
 
+      .cover-wrap {
+        min-height: 78vh;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .cover-card {
+        width: min(920px, 100%);
+        min-height: 420px;
+        padding: 56px 44px;
+        border-radius: 34px;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(24, 59, 86, 0.12),
+            transparent 55%
+          ),
+          linear-gradient(145deg, #ffffff, #f3f7ff);
+        border: 1px solid var(--line);
+        box-shadow: 0 24px 60px rgba(16, 24, 40, 0.12);
+      }
+      .cover-title {
+        margin: 0 0 28px;
+        font-size: clamp(42px, 5.8vw, 72px);
+        letter-spacing: -0.02em;
+      }
+      .cover-lines {
+        display: grid;
+        gap: 18px;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .cover-lines span {
+        display: block;
+        font-size: clamp(22px, 3.8vw, 30px);
+        letter-spacing: 0.08em;
+      }
+      .cover-lines strong {
+        display: block;
+        font-size: clamp(24px, 4vw, 34px);
+        letter-spacing: 0.12em;
+      }
+
       main {
         max-width: 1240px;
         margin: 0 auto;
@@ -741,7 +785,8 @@
 
     <div class="nav-shell">
       <nav class="nav" aria-label="Presentation tabs">
-        <button class="tab-btn active" data-tab="overview">Overview</button>
+        <button class="tab-btn active" data-tab="cover">cover</button>
+        <button class="tab-btn" data-tab="overview">Overview</button>
         <button class="tab-btn" data-tab="midterm">期中專案</button>
         <button class="tab-btn" data-tab="q1">期末第一題</button>
         <button class="tab-btn" data-tab="q2">期末第二題</button>
@@ -750,7 +795,19 @@
     </div>
 
     <main>
-      <section id="overview" class="active">
+      <section id="cover" class="active">
+        <div class="cover-wrap">
+          <div class="cover-card">
+            <h2 class="cover-title">ERP 專案報告</h2>
+            <div class="cover-lines">
+              <span>第七組</span>
+              <strong>114423011</strong>
+              <span>黃昱鈞</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="overview">
         <div class="panel">
           <div class="section-head">
             <div>
@@ -1416,6 +1473,7 @@
       buttons.forEach((button) =>
         button.addEventListener("click", () => showTab(button.dataset.tab)),
       );
+      showTab("cover");
     </script>
   </body>
 </html>
